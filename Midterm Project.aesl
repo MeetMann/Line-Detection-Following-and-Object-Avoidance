@@ -1,0 +1,138 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+<constant value="0" name="STOPPED"/>
+<constant value="1" name="LEFT"/>
+<constant value="2" name="RIGHT"/>
+<constant value="650" name="EDGE"/>
+<constant value="225" name="TARGET"/>
+<constant value="1500" name="THRESHOLD"/>
+<constant value="3" name="BLOCKED"/>
+<constant value="4" name="FORWARD"/>
+<constant value="6" name="TURNING"/>
+<constant value="8" name="RIGHT1"/>
+<constant value="9" name="LEFT1"/>
+<constant value="10" name="TURNING1"/>
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="1" name="thymio-II">#*  File: Midterm Project
+	Date: Feb/March,2022
+	Author: Prabhmeet Mann
+	Purpose: Midterm Project - Line Hurdles
+	Description: A program that makes the Thymio Robot follow a black taped line and avoids blocks when faced with them.
+*#
+
+var state = STOPPED                 
+var min										# variable declarations
+var mean
+var max
+
+
+motor.left.target = 0       # reset motors
+motor.right.target = 0
+
+onevent button.forward      # on forward button press
+  state = LEFT              # transition to LEFT state
+
+onevent button.backward     # on backward button press
+  state = STOPPED           # transition to STOPPED state
+  motor.left.target = 0     # stop motors
+  motor.right.target = 0
+  
+	
+onevent prox    					  # on prox event
+  if state != STOPPED then  # if robot is moving
+   
+     # if moving left and not sensing black line
+    if state == LEFT and  prox.ground.delta[0] >= EDGE then
+      state = RIGHT         #  transition to RIGHT state
+      motor.left.target = TARGET        #  move right
+      motor.right.target = 0
+    end
+    
+    # if moving right and sensing black line
+    if state == RIGHT and prox.ground.delta[0] &lt; EDGE then
+      state = LEFT          #  transition to LEFT state
+      motor.left.target = 0        #  move left
+      motor.right.target = TARGET
+    end 
+   end
+   # if sensing black line on left and robot is turning
+   if prox.ground.delta[0] &lt; EDGE and (state == TURNING or  	state == TURNING1) then
+      state = RIGHT    	       # transition to RIGHT state                
+   end 
+	# if block is seen on left side and robot is in TURNING1
+	if state == TURNING1 and prox.horizontal[0] > THRESHOLD then
+		 state = LEFT1		# transition to LEFT1 state
+		motor.left.target = 125	  
+		motor.right.target = -125
+# else, if robot is in TURNING and block is seen on right side
+elseif state == TURNING and prox.horizontal[4] > THRESHOLD then
+	state = RIGHT1		# transition to RIGHT1 state
+		motor.left.target = -125   # turn on axis to the right
+		motor.right.target = 125
+end
+ 
+ 	 call math.stat(prox.horizontal[0:4], min, max, mean)
+# if block is in the way and robot is moving
+    if max>THRESHOLD and state != STOPPED and state != TURNING and state != FORWARD and state != LEFT1 and state != RIGHT1 then
+    state = BLOCKED		# transition to BLOCKED state
+    motor.left.target = 0		# stop the robot
+    motor.right.target = 0
+    
+  
+# if state is BLOCKED and block is closer to right of robot
+	if state == BLOCKED and prox.horizontal[4] > prox.horizontal[0] then
+	state = LEFT1  # transition to LEFT1 state
+		motor.left.target = 125	  # turn on axis to the left
+		motor.right.target = -125
+# else, if state is BLOCKED and block is closer to left of robot		
+		elseif state == BLOCKED and prox.horizontal[4] &lt; 		prox.horizontal[0] then
+		state = RIGHT1 # transition to RIGHT1 state 
+		motor.left.target = -125	# turn on axis to the right
+		motor.right.target = 125
+		# otherwise if both sensors equal each other
+		else
+		state = LEFT1 	# transition to LEFT1 state
+		motor.left.target = 125	  # turn on axis to the left
+		motor.right.target = -125
+		end
+	end
+	# if state is LEFT1 and robot cannot see block at all
+	if  state == LEFT1 and prox.horizontal[0] == 0 and prox.horizontal[1] == 0 and prox.horizontal[2] == 0 and prox.horizontal[3] == 0 and prox.horizontal[4] == 0  then
+	state = TURNING1 	# transition to TURNING1 state
+			motor.left.target = 175 # turn right
+			motor.right.target = 314
+	end
+	# if state is RIGHT1 and robot cannot see block at all
+	if  state == RIGHT1 and prox.horizontal[0] == 0 and prox.horizontal[1] == 0 and prox.horizontal[2] == 0 and prox.horizontal[3] == 0 and prox.horizontal[4] == 0  then
+	state = TURNING 	# transition to TURNING state 
+			motor.left.target = 314		# turn left
+			motor.right.target = 175
+	end
+	
+	
+
+	
+
+	
+	
+	
+	
+	  
+  
+
+ </node>
+
+
+</network>
