@@ -25,11 +25,10 @@
 
 
 <!--node thymio-II-->
-<node nodeId="1" name="thymio-II">#*  File: Midterm Project
+<node nodeId="1" name="thymio-II">#*  File: Line Detection, Following, and Object Avoidance
 	Date: Feb/March,2022
 	Author: Prabhmeet Mann
-	Purpose: Midterm Project - Line Hurdles
-	Description: A program that makes the Thymio Robot follow a black taped line and avoids blocks when faced with them.
+	Description: A program that allows the Thymio Robot to follow a black taped line and avoids blocks when faced with them.
 *#
 
 var state = STOPPED                 
